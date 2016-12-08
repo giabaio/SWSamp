@@ -1,0 +1,156 @@
+\name{sim.power}
+\alias{sim.power}
+\title{
+Power calculations based on a simulation approach
+}
+\description{
+Simulation-based power calculations for a SWT with normally distributed outcome
+}
+\usage{
+sim.power(I, J, H = NULL, K, design = "cross-sec", mu = 0, b.trt, b.time = NULL,
+sigma.y=NULL,sigma.e=NULL,rho,sigma.a=NULL,rho.ind=NULL,sigma.v=NULL,
+n.sims=1000,formula=NULL,family="gaussian",natural.scale=TRUE,sig.level=0.05,
+n.cores=NULL,method="lme",plot=FALSE,...)
+}
+\arguments{
+  \item{I}{
+Number of clusters
+}
+  \item{J}{
+Number of time points
+}
+  \item{H}{
+Number of units randomised at each time point
+}
+  \item{K}{
+Average size of each cluster
+}
+  \item{design}{
+type of design. Can be \code{'cross-sec'} (default) or \code{'cohort'} (repeated measurements)
+}
+  \item{mu}{
+baseline outcome value
+}
+  \item{b.trt}{
+Treatment effect
+}
+  \item{b.time}{
+Time effect
+}
+  \item{sigma.y}{
+total standard deviation
+}
+  \item{sigma.e}{
+individual standard deviation
+}
+  \item{rho}{
+Intra-class correlation coefficient
+}
+  \item{sigma.a}{
+the sd of the the cluster-level intercept (default at NULL)
+}
+  \item{rho.ind}{
+individual-level ICC (for cohorts)
+}
+  \item{sigma.v}{
+the sd of the cluster-level slope (by intervention, default at NULL)
+}
+  \item{n.sims}{
+Number of simulations to be used (default=1000)
+}
+  \item{formula}{
+Formula describing the model to be used
+}
+\item{family}{
+The model family to be used. Default value is 'gaussian' and other possibile
+choices are 'binomial' or 'poisson'
+}
+\item{natural.scale}{
+Indicator for whether the input is passed on the natural scale or on the scale of
+the linear predictor. By default is set to TRUE. In the case of family='gaussian'
+it does not have any effect, since the link for the linear predictor is the identity.
+But for family='binomial' or family='poisson', the user has to specify when the input
+is given on the logit or log scale
+}
+  \item{sig.level}{
+Significance level (default=0.05)
+}
+  \item{n.cores}{
+Specifies the number of processors to be used for the computation (default=NULL, which
+means that R will try and figure out)
+}
+\item{method}{
+A string specifying the method to be used for the calculation. The default value is 
+\code{lme}, indicating a standard frequentist analysis, based on (generalised) linear
+model and including structured (random) effects, when necessary. An alternative version
+is framed in a Bayesian setting and uses Integrated Nested Laplace Approximation (INLA)
+to analyse the data and obtain the relevant estimates for the posterior distributions 
+of the model parameters. This can be performed by setting \code{method='inla'}
+}
+\item{plot}{
+Shows a plot of the moving average of the resulting power after 10%, 20%, ..., 100% of
+the simulations. This helps assessing the convergence of the estimate towards some 
+common value. The default is \code{FALSE}, in which case a graph is not shown.
+}
+\item{...}{
+Additional optional arguments. The user can specify a function named \code{data}, which
+defines the simulation of the 'virtual trial data'. These can be in any given form, with
+the only constraint that it should return a data frame containing the relevant variables.
+The function \code{data} can have no arguments at all, but this can be relaxed and there
+can be suitable inputs to this function. In this case, the user also needs to specify
+a list \code{inpts} including all the values for the arguments to be used with the 
+user-defined function \code{data}. When using user-defined data generating processes,
+the user must be also pass a relevant formula, depending on what the model used (for
+both generation of the dataset and analysis) is. Another additional argument that can
+be passed to the call to \code{sim.sw.cont} is \code{treatment}, a string specifying
+the name of the treatment variable (if not present, \code{SWSamp} assumes that this is
+exactly 'treatment').
+}
+}
+\value{
+\item{power}{
+The resulting estimated power, for the given configuration. If the model does not include
+random effects, this is based on the p-value computed by \code{lm}, which is used to 
+analyse the simulated datasets. If the model does include random effects (which is 
+the case for a SWT), then \code{SWSample} assesses whether the 'true' effect is 
+correctly detected by computing the (1-\code{alpha})% confidence interval and checking
+whether it is entirely above or below 0. This is because it is difficult to assess
+the correct degrees of freedom of the resulting (linear) mixed model. The p-value could
+be computed using the Satterthwaite approximation, or by using a rougher Normal 
+approximation, but in line with suggestions by Pinheiro, J. C., and D. M. Bates. 
+2000. Mixed-effects models in S and S-PLUS. Springer, New York, we sidestep the problem
+by focussing on estimation, rather than hypothesis testing for this.
+}
+\item{time2run}{Running time, in seconds}
+\item{ci.power}{Estimated 95\% confidence interval for the power - based on normal approximation}
+\item{theta}{Estimated treatment effect with standard error}
+\item{rnd.eff.sd}{Estimated variance components}
+\item{setting}{A list summarising the assumptions in terms of number of clusters, time points,
+type of model, formula used}
+}
+\references{
+Baio, G; Copas, A; Ambler, G; Hargreaves, J; Beard, E; and Omar, RZ Sample size calculation for 
+a stepped wedge trial. Trials, 16:354. Aug 2015.
+}
+\author{
+Gianluca Baio
+}
+\examples{
+mu1=0.3
+b.trt=-0.3875
+sigma.e=1.55
+J=5
+K=20
+sig.level=0.05
+n.sims=10
+rho=0.5
+pow.cont <- sim.power(I=14,J=J,H=NULL,K=K,rho=rho,mu=mu1,sigma.e=sigma.e,b.trt=b.trt,
+                       formula=NULL,n.sims=n.sims,sig.level=sig.level,n.cores=2)
+pow.cont$power
+pow.cont$ci
+pow.cont$time2run.sec
+pow.cont$rnd.eff.sd^2
+}
+\keyword{Stepped wedge design}
+\keyword{Continuous outcome}
+\keyword{Simulation-based sample size calculations}

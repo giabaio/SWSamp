@@ -1,0 +1,10 @@
+exportPattern("^[[:alpha:]]+")
+importFrom(foreach,'%dopar%')
+importFrom(foreach,foreach)
+importFrom(iterators,icount)
+importFrom(parallel,detectCores)
+importFrom(graphics, abline, axis)
+import(lme4)
+import(Matrix)
+importFrom(stats, terms, as.formula, complete.cases, delete.response, drop1, formula, lm, logLik, model.frame, model.matrix, pchisq, pf, printCoefmat, pt, qt, setNames, update.formula, vcov, confint, pnorm, power.prop.test, power.t.test, qnorm, rnorm, var, glm, rbinom, rpois,
+median)
