@@ -12,4 +12,3 @@ Maintainer: Gianluca Baio <g.baio@ucl.ac.uk>
 Description: Provides a suite of functions for the sample size calculations and power analysis in a Stepped Wedge Trial. Contains functions for closed-form sample size calculation (based on a set of specific models) and simulation-based procedures that can extend the basic framework.
 License: GPL-2
 NeedsCompilation: no
-Packaged: 2016-08-17 10:44:00 UTC; gianluca
