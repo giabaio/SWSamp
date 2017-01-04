@@ -11,5 +11,5 @@ Additional_repositories: https://www.math.ntnu.no/inla/R/stable
 Author: Gianluca Baio, Rosie Leech
 Maintainer: Gianluca Baio <g.baio@ucl.ac.uk>
 Description: Provides a suite of functions for the sample size calculations and power analysis in a Stepped Wedge Trial. Contains functions for closed-form sample size calculation (based on a set of specific models) and simulation-based procedures that can extend the basic framework.
-License: GPL-2
+License: File LICENSE
 NeedsCompilation: no
