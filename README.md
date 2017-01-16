@@ -26,7 +26,7 @@ install.packages("SWSamp",
 
 The second way involves using the "development" version of `SWSamp` - this will usually be updated more frequently and may be continuously tested. On Windows machines, you need to install a few dependencies, including [Rtools](https://cran.r-project.org/bin/windows/Rtools/) first, e.g. by running
 ```R
-pkgs <- c("foreach", "doParallel", "iterators", "parallel", "Matrix","lme4","INLA","Rtools,"devtools")
+pkgs <- c("foreach", "doParallel", "iterators", "parallel", "Matrix","lme4","INLA","Rtools","devtools")
 repos <- c("https://cran.rstudio.com", "https://www.math.ntnu.no/inla/R/stable") 
 install.packages(pkgs,repos=repos,dependencies = "Depends")
 ```
