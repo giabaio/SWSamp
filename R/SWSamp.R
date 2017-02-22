@@ -541,23 +541,23 @@ sim.power <- function (I,J,H=NULL,K,design="cross-sec",mu=0,b.trt,b.time=NULL,
 	       } else {
 	         m <- glm(formula, data=fake.data,family=family)
 	       }
-         which.treat <- which(names(m$coefficients)==treatment)
-         theta <- m$coefficients[which.treat]
-         sd.theta <- summary(m)$coefficients[which.treat,2]
-         se <- summary(m)$coefficients[,2]
-         betas <- summary(m)$coefficients[,1]
-	       tval <- summary(m)$coefficients[,3]
-	       df <- summary(m)$df[2]
-	       pval <- summary(m)$coefficients[,4]
-	       pvalue <- pval[which.treat] 
-	       signif <- pvalue < sig.level
-	       if(family=="gaussian") {method <- "lm"} else {method <- "glm"}
-	        rnd.eff.sd=NULL
-	       }
+           which.treat <- which(names(m$coefficients)==treatment)
+           theta <- m$coefficients[which.treat]
+           sd.theta <- summary(m)$coefficients[which.treat,2]
+           se <- summary(m)$coefficients[,2]
+           betas <- summary(m)$coefficients[,1]
+           tval <- summary(m)$coefficients[,3]
+    	   df <- summary(m)$df[2]
+    	   pval <- summary(m)$coefficients[,4]
+    	   pvalue <- pval[which.treat] 
+    	   signif <- pvalue < sig.level
+    	   if(family=="gaussian") {method <- "lm"} else {method <- "glm"}
+    	   rnd.eff.sd=NULL
+	     }
          list(power=signif,theta=theta,sd.theta=sd.theta,
 	       rnd.eff.sd=rnd.eff.sd,method=method,pvalue=pvalue) 
 	     }
-	    } 
+	  } 
     }
 
   # For standard SWT data generating processes (uses make.swt)
@@ -724,7 +724,11 @@ sim.power <- function (I,J,H=NULL,K,design="cross-sec",mu=0,b.trt,b.time=NULL,
     abline(h=ci[1],col="red",lwd=2,lty=2)
     abline(h=ci[2],col="red",lwd=2,lty=2)
   }
-  rnd.eff.sd=mean(unlist(res[4,]),na.rm=T)
+  if (!is.null(unlist(res[4,]))) {
+      rnd.eff.sd=apply(do.call(cbind.data.frame,res[4,]),1,mean,na.rm=T)
+  } else {
+      rnd.eff.sd=NULL
+  }
   list(power=power,time2run=time2run,ci.power=ci,theta=theta,
        rnd.eff.sd=rnd.eff.sd,setting=setting) # pvalue=pvalue,
 }
