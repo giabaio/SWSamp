@@ -252,7 +252,7 @@ make.swt <- function(I=NULL,J=NULL,H=NULL,K,design="cross-sec",mu=NULL,b.trt,
       }
       mu.v <- 0                                     # within individuals (random intercept) mean
       v <- rnorm(K*I,mu.v,sigma.v)                  # individual-level intercept
-      sigma.a <- sqrt(sigma.y^2*rho)                # Within cluster (random intercept) sd 
+###      sigma.a <- sqrt(sigma.y^2*rho)                # Within cluster (random intercept) sd 
       a <- rnorm (I, mu.a, sigma.a)                 # cluster-level intercept 
       
       # CALCULATE LINEAR PREDICTOR ON THE LOGIT SCALE!
@@ -364,7 +364,7 @@ make.swt <- function(I=NULL,J=NULL,H=NULL,K,design="cross-sec",mu=NULL,b.trt,
       }
       mu.v <- 0                                     # within individuals (random intercept) mean
       v <- rnorm(K*I,mu.v,sigma.v)                  # individual-level intercept
-      sigma.a <- sqrt(sigma.y^2*rho)                # Within cluster (random intercept) sd 
+###      sigma.a <- sqrt(sigma.y^2*rho)                # Within cluster (random intercept) sd 
       a <- rnorm (I, mu.a, sigma.a)                 # cluster-level intercept 
       
       # CALCULATE LINEAR PREDICTOR
