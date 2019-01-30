@@ -1,3 +1,42 @@
+#' Simulates a 'virtual' Stepped Wedge trial
+#' 
+#' Simulates trial data for a SWT with normally distributed outcome
+#' 
+#' 
+#' @param I Number of clusters
+#' @param J Number of time points
+#' @param H Number of units randomised at each time point
+#' @param K Average size of each cluster
+#' @param design type of design. Can be \code{'cross-sec'} (default) or
+#' \code{'cohort'} (repeated measurements)
+#' @param mu baseline outcome value
+#' @param b.trt Treatment effect
+#' @param b.time Time effect
+#' @param sigma.y total standard deviation
+#' @param sigma.e individual standard deviation
+#' @param rho Intra-class correlation coefficient
+#' @param sigma.a the sd of the the cluster-level intercept (default at NULL)
+#' @param rho.ind individual-level ICC (for cohorts)
+#' @param sigma.v the sd of the cluster-level slope (by intervention, default
+#' at NULL)
+#' @param X A design matrix for the SWT. Default at NULL (will be computed
+#' automatically)
+#' @param family The model family to be used. Default value is 'gaussian' and
+#' other possibile choices are 'binomial' or 'poisson'
+#' @param natural.scale Indicator for whether the input is passed on the
+#' natural scale or on the scale of the linear predictor. By default is set to
+#' TRUE. In the case of family='gaussian' it does not have any effect, since
+#' the link for the linear predictor is the identity. But for family='binomial'
+#' or family='poisson', the user has to specify when the input is given on the
+#' logit or log scale
+#' @return \item{data}{A data frame containing the resulting simulated dataset}
+#' @author Gianluca Baio, Rosie Leach
+#' @seealso See Also \code{\link{sim.power}}
+#' @references Baio, G; Copas, A; Ambler, G; Hargreaves, J; Beard, E; and Omar,
+#' RZ Sample size calculation for a stepped wedge trial. Trials, 16:354. Aug
+#' 2015.
+#' @keywords Stepped wedge design Continuous outcome Trial data simulation
+#' @export make.swt
 make.swt <- function(I=NULL,J=NULL,H=NULL,K,design="cross-sec",mu=NULL,b.trt,
                      b.time=NULL,sigma.y=NULL,sigma.e=NULL,rho,sigma.a=NULL,rho.ind=NULL,
                      sigma.v=NULL,X=NULL,family="gaussian",natural.scale=TRUE)  {
@@ -381,6 +420,114 @@ make.swt <- function(I=NULL,J=NULL,H=NULL,K,design="cross-sec",mu=NULL,b.trt,
   return(data)
 }
 
+
+
+
+
+#' Power calculations based on a simulation approach
+#' 
+#' Simulation-based power calculations for a SWT with normally distributed
+#' outcome
+#' 
+#' 
+#' @param I Number of clusters
+#' @param J Number of time points
+#' @param H Number of units randomised at each time point
+#' @param K Average size of each cluster
+#' @param design type of design. Can be \code{'cross-sec'} (default) or
+#' \code{'cohort'} (repeated measurements)
+#' @param mu baseline outcome value
+#' @param b.trt Treatment effect
+#' @param b.time Time effect
+#' @param sigma.y total standard deviation
+#' @param sigma.e individual standard deviation
+#' @param rho Intra-class correlation coefficient
+#' @param sigma.a the sd of the the cluster-level intercept (default at NULL)
+#' @param rho.ind individual-level ICC (for cohorts)
+#' @param sigma.v the sd of the cluster-level slope (by intervention, default
+#' at NULL)
+#' @param n.sims Number of simulations to be used (default=1000)
+#' @param formula Formula describing the model to be used
+#' @param family The model family to be used. Default value is 'gaussian' and
+#' other possibile choices are 'binomial' or 'poisson'
+#' @param natural.scale Indicator for whether the input is passed on the
+#' natural scale or on the scale of the linear predictor. By default is set to
+#' TRUE. In the case of family='gaussian' it does not have any effect, since
+#' the link for the linear predictor is the identity. But for family='binomial'
+#' or family='poisson', the user has to specify when the input is given on the
+#' logit or log scale
+#' @param sig.level Significance level (default=0.05)
+#' @param n.cores Specifies the number of processors to be used for the
+#' computation (default=NULL, which means that R will try and figure out)
+#' @param method A string specifying the method to be used for the calculation.
+#' The default value is \code{lme}, indicating a standard frequentist analysis,
+#' based on (generalised) linear model and including structured (random)
+#' effects, when necessary. An alternative version is framed in a Bayesian
+#' setting and uses Integrated Nested Laplace Approximation (INLA) to analyse
+#' the data and obtain the relevant estimates for the posterior distributions
+#' of the model parameters. This can be performed by setting
+#' \code{method='inla'}
+#' @param plot Shows a plot of the moving average of the resulting power after
+#' 10%, 20%, ..., 100% of the simulations. This helps assessing the convergence
+#' of the estimate towards some common value. The default is \code{FALSE}, in
+#' which case a graph is not shown.
+#' @param ...  Additional optional arguments. The user can specify a function
+#' named \code{data}, which defines the simulation of the 'virtual trial data'.
+#' These can be in any given form, with the only constraint that it should
+#' return a data frame containing the relevant variables. The function
+#' \code{data} can have no arguments at all, but this can be relaxed and there
+#' can be suitable inputs to this function. In this case, the user also needs
+#' to specify a list \code{inpts} including all the values for the arguments to
+#' be used with the user-defined function \code{data}. When using user-defined
+#' data generating processes, the user must be also pass a relevant formula,
+#' depending on what the model used (for both generation of the dataset and
+#' analysis) is. Another additional argument that can be passed to the call to
+#' \code{sim.sw.cont} is \code{treatment}, a string specifying the name of the
+#' treatment variable (if not present, \code{SWSamp} assumes that this is
+#' exactly 'treatment').
+#' @return \item{power}{ The resulting estimated power, for the given
+#' configuration. If the model does not include random effects, this is based
+#' on the p-value computed by \code{lm}, which is used to analyse the simulated
+#' datasets. If the model does include random effects (which is the case for a
+#' SWT), then \code{SWSample} assesses whether the 'true' effect is correctly
+#' detected by computing the (1-\code{alpha})% confidence interval and checking
+#' whether it is entirely above or below 0. This is because it is difficult to
+#' assess the correct degrees of freedom of the resulting (linear) mixed model.
+#' The p-value could be computed using the Satterthwaite approximation, or by
+#' using a rougher Normal approximation, but in line with suggestions by
+#' Pinheiro, J. C., and D. M. Bates.  2000. Mixed-effects models in S and
+#' S-PLUS. Springer, New York, we sidestep the problem by focussing on
+#' estimation, rather than hypothesis testing for this. }
+#' \item{time2run}{Running time, in seconds} \item{ci.power}{Estimated 95\%
+#' confidence interval for the power - based on normal approximation}
+#' \item{theta}{Estimated treatment effect with standard error}
+#' \item{rnd.eff.sd}{Estimated variance components} \item{setting}{A list
+#' summarising the assumptions in terms of number of clusters, time points,
+#' type of model, formula used}
+#' @author Gianluca Baio
+#' @references Baio, G; Copas, A; Ambler, G; Hargreaves, J; Beard, E; and Omar,
+#' RZ Sample size calculation for a stepped wedge trial. Trials, 16:354. Aug
+#' 2015.
+#' @keywords Stepped wedge design Continuous outcome Simulation-based sample
+#' size calculations
+#' @examples
+#' 
+#' mu1=0.3
+#' b.trt=-0.3875
+#' sigma.e=1.55
+#' J=5
+#' K=20
+#' sig.level=0.05
+#' n.sims=10
+#' rho=0.5
+#' pow.cont <- sim.power(I=14,J=J,H=NULL,K=K,rho=rho,mu=mu1,sigma.e=sigma.e,b.trt=b.trt,
+#'                        formula=NULL,n.sims=n.sims,sig.level=sig.level,n.cores=2)
+#' pow.cont$power
+#' pow.cont$ci
+#' pow.cont$time2run.sec
+#' pow.cont$rnd.eff.sd^2
+#' 
+#' @export sim.power
 sim.power <- function (I,J,H=NULL,K,design="cross-sec",mu=0,b.trt,b.time=NULL,
                       sigma.y=NULL,sigma.e=NULL,rho=NULL,sigma.a=NULL,
                       rho.ind=NULL,sigma.v=NULL,n.sims=1000,formula=NULL,
@@ -880,6 +1027,50 @@ sim.power <- function (I,J,H=NULL,K,design="cross-sec",mu=0,b.trt,b.time=NULL,
 # }
 
 
+
+
+
+
+#' Power calculation for binary outcome based on analytic formula of Hussey and
+#' Hughes
+#' 
+#' Sample size calculations for binary outcomes based on the formula provided
+#' by Hussey and Hughes (2007)
+#' 
+#' 
+#' @param p1 Baseline probability of the outcome (for the controls)
+#' @param OR Value of the expected Odds Ratio (for the intervention vs control)
+#' @param I Number of clusters
+#' @param J Number of time points
+#' @param K Average size of each cluster
+#' @param rho Intra-class correlation coefficient (default=0)
+#' @param sig.level Significance level (default=0.05)
+#' @param which.var String character specifying which variance to be considered
+#' (options are the default value \code{'within'} or \code{'total'}
+#' @param X A design matrix for the stepped wedge design, indicating the time
+#' at which each of the clusters should switch the active intervention. By
+#' default is NULL and automatically computed, but can be passed as an extra
+#' argument as a user-defined matrix with I rows and (J+1) columns
+#' @return \item{power}{ The resulting power } \item{sigma.y}{The estimated
+#' total (marginal) sd for the outcome} \item{sigma.e}{The estimated residual
+#' sd} \item{sigma.a}{The resulting cluster-level sd} \item{setting}{A list
+#' including the following values: - n.clusters = The number of clusters -
+#' n.time.points = The number of 'active' time points - avg.cluster.size = The
+#' average cluster size - design.matrix = The design matrix for the SWT under
+#' consideration }
+#' @author Gianluca Baio
+#' @references Baio, G; Copas, A; Ambler, G; Hargreaves, J; Beard, E; and Omar,
+#' RZ Sample size calculation for a stepped wedge trial. Trials, 16:354. Aug
+#' 2015.
+#' 
+#' Hussey M and Hughes J. Design and analysis of stepped wedge cluster
+#' randomized trials. Contemporary Clinical Trials. 28(2):182-91. Epub 2006 Jul
+#' 7. Feb 2007
+#' @keywords Hussey and Hughes formula
+#' @examples
+#' 
+#' HH.binary(p1=.26,OR=.55,I=10,J=5,K=20,rho=.2)
+#' @export HH.binary
 HH.binary <- function(p1,OR,I,J,K,rho=0,sig.level=0.05,which.var="within",X=NULL) {
   # HH sample size calculations for binary outcome
   if(is.null(X)) {
@@ -917,6 +1108,54 @@ HH.binary <- function(p1,OR,I,J,K,rho=0,sig.level=0.05,which.var="within",X=NULL
 }
 
 
+
+
+
+
+#' Power calculation for normal outcome based on analytic formula of Hussey and
+#' Hughes
+#' 
+#' Sample size calculations for normal outcomes based on the formula provided
+#' by Hussey and Hughes (2007)
+#' 
+#' 
+#' @param mu Mean value of the outcome for the controls
+#' @param b.trt Treatment effect against controls
+#' @param sigma Value of the standard deviation (if \code{which.var}='within'
+#' then it's assumed to be the residual sd. If \code{which.var}='total', then
+#' it's assumed to be the total sd)
+#' @param I Number of clusters
+#' @param J Number of time points
+#' @param K Average size of each cluster
+#' @param rho Intra-class correlation coefficient (default=0)
+#' @param sig.level Significance level (default=0.05)
+#' @param which.var String character specifying which variance to be considered
+#' (options are the default value \code{'within'} or \code{'total'}
+#' @param X A design matrix for the stepped wedge design, indicating the time
+#' at which each of the clusters should switch the active intervention. By
+#' default is NULL and automatically computed, but can be passed as an extra
+#' argument as a user-defined matrix with I rows and (J+1) columns
+#' @return \item{power}{ The resulting power } \item{sigma.y}{The estimated
+#' total (marginal) sd for the outcome} \item{sigma.e}{The estimated residual
+#' sd} \item{sigma.a}{The resulting cluster-level sd} \item{setting}{A list
+#' including the following values: - n.clusters = The number of clusters -
+#' n.time.points = The number of 'active' time points - avg.cluster.size = The
+#' average cluster size - design.matrix = The design matrix for the SWT under
+#' consideration }
+#' @author Gianluca Baio
+#' @references Baio, G; Copas, A; Ambler, G; Hargreaves, J; Beard, E; and Omar,
+#' RZ Sample size calculation for a stepped wedge trial. Trials, 16:354. Aug
+#' 2015.
+#' 
+#' Hussey M and Hughes J. Design and analysis of stepped wedge cluster
+#' randomized trials. Contemporary Clinical Trials. 28(2):182-91. Epub 2006 Jul
+#' 7. Feb 2007
+#' @keywords Hussey and Hughes formula
+#' @examples
+#' 
+#' HH.normal(mu=.3,b.trt=-.3875,I=10,J=5,K=20,rho=.2,sigma=1.55)
+#' 
+#' @export HH.normal
 HH.normal <- function(mu,b.trt,sigma,I,J,K,rho=0,sig.level=0.05,which.var="within",X=NULL) {
   # HH sample size calculations for continuous (normal) outcome
   # Stepped wedge design matrix
@@ -955,6 +1194,51 @@ HH.normal <- function(mu,b.trt,sigma,I,J,K,rho=0,sig.level=0.05,which.var="withi
 }
 
 
+
+
+
+
+#' Power calculation for count outcome based on analytic formula of Hussey and
+#' Hughes
+#' 
+#' Sample size calculations for count outcomes based on the formula provided by
+#' Hussey and Hughes (2007)
+#' 
+#' 
+#' @param lambda1 Baseline value for the rate at which the outcome occurs
+#' @param RR Relative risk (of the intervention vs the control)
+#' @param I Number of clusters
+#' @param J Number of time points
+#' @param K Average size of each cluster
+#' @param rho Intra-class correlation coefficient (default=0)
+#' @param sig.level Significance level (default=0.05)
+#' @param which.var String character specifying which variance to be considered
+#' (options are the default value \code{'within'} or \code{'total'}
+#' @param X A design matrix for the stepped wedge design, indicating the time
+#' at which each of the clusters should switch the active intervention. By
+#' default is NULL and automatically computed, but can be passed as an extra
+#' argument as a user-defined matrix with I rows and (J+1) columns
+#' @return \item{power}{ The resulting power } \item{sigma.y}{The estimated
+#' total (marginal) sd for the outcome} \item{sigma.e}{The estimated residual
+#' sd} \item{sigma.a}{The resulting cluster-level sd} \item{setting}{A list
+#' including the following values: - n.clusters = The number of clusters -
+#' n.time.points = The number of 'active' time points - avg.cluster.size = The
+#' average cluster size - design.matrix = The design matrix for the SWT under
+#' consideration }
+#' @author Gianluca Baio
+#' @references Baio, G; Copas, A; Ambler, G; Hargreaves, J; Beard, E; and Omar,
+#' RZ Sample size calculation for a stepped wedge trial. Trials, 16:354. Aug
+#' 2015.
+#' 
+#' Hussey M and Hughes J. Design and analysis of stepped wedge cluster
+#' randomized trials. Contemporary Clinical Trials. 28(2):182-91. Epub 2006 Jul
+#' 7. Feb 2007
+#' @keywords Hussey and Hughes formula
+#' @examples
+#' 
+#' HH.count(lambda1=1.55,RR=.87,I=10,J=5,K=20,rho=.2)
+#' 
+#' @export HH.count
 HH.count <- function(lambda1,RR,I,J,K,rho=0,sig.level=0.05,which.var="within",X=NULL) {
   # HH sample size calculations for continuous (normal) outcome
   # Stepped wedge design matrix
@@ -991,6 +1275,24 @@ HH.count <- function(lambda1,RR,I,J,K,rho=0,sig.level=0.05,which.var="within",X=
 }
 
 
+
+
+
+
+#' Creates a design matrix for a Stepped Wedge Trial
+#' 
+#' Constructs a basic SWT design matrix
+#' 
+#' 
+#' @param I Number of clusters
+#' @param J Number of time points
+#' @param H Number of units randomised at each time point
+#' @return Returns a design matrix X
+#' @author Gianluca Baio
+#' @references Baio, G; Copas, A; Ambler, G; Hargreaves, J; Beard, E; and Omar,
+#' RZ Sample size calculation for a stepped wedge trial. Trials, 16:354. Aug
+#' 2015.
+#' @export sw.design.mat
 sw.design.mat <- function(I,J,H=NULL) {
   ## Creates the design matrix for a stepped wedge design
   ## Checks to see that data are consistent with SW design
@@ -1018,6 +1320,62 @@ sw.design.mat <- function(I,J,H=NULL) {
 }
 
 
+
+
+
+
+#' Computes the Design Effect for a Stepped Wedge Trial
+#' 
+#' Sample size calculations for a SWT using a cross-sectional design.  This is
+#' based on (the correct version) of Woertman et al (2013), as described in
+#' Baio et al (2015).
+#' 
+#' 
+#' @param outcome String. Type of outcome. Options are \code{cont}, \code{bin}
+#' or \code{count}
+#' @param input input = a list containing the arguments. This differs depending
+#' on the type of outcome, as follows: - continuous outcome: 1) delta
+#' (treatment effect) 2) sd (standard deviation) - binary outcome: 1) p1
+#' (baseline probability of outcome) 2) either p2 (treatment probability of
+#' outcome), or OR (treatment effect as OR) - count outcome: 1) r1 (baseline
+#' rate of outcome) 2) either r2 (treatment rate of outcome), or RR (treatment
+#' effect as RR)
+#' @param K average cluster size
+#' @param J number of time points (excluding baseline)
+#' @param B number of baseline measurement times
+#' @param T number of measurement times during each crossover
+#' @param rho ICC
+#' @param sig.level significance level (default = 0.05)
+#' @param power Power (default = 0.8)
+#' @return \item{n.cls.swt}{ Number of clusters required to reach the
+#' pre-specified power with the given significance level. } \item{n.pts}{ The
+#' total number of participants required. } \item{DE.woert}{ The resulting
+#' Design Effect. } \item{CF}{ The resulting Correction Factor. } \item{n.rct}{
+#' The original individual RCT sample required to reach the pre-specified power
+#' with the given significance level. }
+#' @author Gianluca Baio
+#' @references Baio, G; Copas, A; Ambler, G; Hargreaves, J; Beard, E; and Omar,
+#' RZ Sample size calculation for a stepped wedge trial. Trials, 16:354. Aug
+#' 2015.
+#' @keywords Design Effect
+#' @examples
+#' 
+#' # Continuous outcome
+#' input <- list(delta=-0.3875,sd=1.55)
+#' K <- 20
+#' J <- 5
+#' rho <- .2
+#' DE.woert(input=input,K=K,J=J,rho=rho)
+#' #
+#' # Binary outcome
+#' input <- list(OR=.53,p1=.26)
+#' DE.woert(outcome="bin",input=input,K=K,J=J,rho=rho)
+#' #
+#' # Count outcome
+#' input <- list(RR=.8,r1=1.5)
+#' DE.woert(outcome="count",input=input,K=K,J=J,rho=rho)
+#' 
+#' @export DE.woert
 DE.woert <- function(outcome="cont",input,K,J,B=1,T=1,rho,sig.level=0.05,power=.8) {
   # Computes the power for a SWT using the corrected form of the Woertman Design Effect
   # outcome = a string (default "cont", possible values are "bin" or "count")
@@ -1078,6 +1436,66 @@ DE.woert <- function(outcome="cont",input,K,J,B=1,T=1,rho,sig.level=0.05,power=.
 
 
 
+
+
+
+
+#' Finds the optimum number of clusters or time points
+#' 
+#' Given some inputs determines the optimal combination of clusters/time points
+#' to get a set level of power.
+#' 
+#' 
+#' @param target.power The target power (eg 0.8)
+#' @param I A vector specifying the range in which to search for the optimal
+#' number of clusters, eg \code{I=c(1,10)}
+#' @param J Number of time points
+#' @param H Number of units randomised at each time point
+#' @param K Average size of each cluster
+#' @param design type of design. Can be \code{'cross-sec'} (default) or
+#' \code{'cohort'} (repeated measurements)
+#' @param mu baseline outcome value
+#' @param b.trt Treatment effect
+#' @param b.time Time effect
+#' @param sigma.y total standard deviation
+#' @param sigma.e individual standard deviation
+#' @param rho Intra-class correlation coefficient
+#' @param sigma.a the sd of the the cluster-level intercept (default at NULL)
+#' @param rho.ind individual-level ICC (for cohorts)
+#' @param sigma.v the sd of the cluster-level slope (by intervention, default
+#' at NULL)
+#' @param n.sims Number of simulations to be used (default=1000)
+#' @param formula Formula describing the model to be used
+#' @param family The model family to be used. Default value is 'gaussian' and
+#' other possibile choices are 'binomial' or 'poisson'
+#' @param natural.scale Indicator for whether the input is passed on the
+#' natural scale or on the scale of the linear predictor. By default is set to
+#' TRUE. In the case of family='gaussian' it does not have any effect, since
+#' the link for the linear predictor is the identity. But for family='binomial'
+#' or family='poisson', the user has to specify when the input is given on the
+#' logit or log scale
+#' @param sig.level Significance level (default=0.05)
+#' @param n.cores Specifies the number of processors to be used for the
+#' computation (default=NULL, which means that R will try and figure out)
+#' @param ... Additional arguments
+#' @return \item{Optimum_I}{ The value of the optimal number of clusters }
+#' \item{power}{The estimated power in correspondence of the optimal I}
+#' \item{time2run}{Computational time}
+#' @author Rosie Leach
+#' @references Baio, G; Copas, A; Ambler, G; Hargreaves, J; Beard, E; and Omar,
+#' RZ Sample size calculation for a stepped wedge trial. Trials, 16:354. Aug
+#' 2015.
+#' 
+#' Hussey M and Hughes J. Design and analysis of stepped wedge cluster
+#' randomized trials. Contemporary Clinical Trials. 28(2):182-91. Epub 2006 Jul
+#' 7. Feb 2007
+#' @keywords Stepped wedge design
+#' @examples
+#' 
+#' #cluster.search(I=c(4,10),target.power=.8,J=6,K=30,mu=1.5,b.trt=.8,rho=0,
+#' #family="poisson",n.sims=10)
+#' 
+#' @export cluster.search
 cluster.search <- function(target.power=NULL, I=NULL, J=NULL ,H=NULL,K,design="cross-sec",mu=0,b.trt,b.time=NULL,
                       sigma.y=NULL,sigma.e=NULL,rho=NULL,sigma.a=NULL,
                       rho.ind=NULL,sigma.v=NULL,n.sims=1000,formula=NULL,
