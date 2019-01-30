@@ -12,8 +12,8 @@ Sample size calculations for a Stepped Wedge Trial
 \tabular{ll}{
 Package: \tab SWSamp\cr
 Type: \tab Package\cr
-Version: \tab 0.3\cr
-Date: \tab 2016-08-17\cr
+Version: \tab 0.3.1\cr
+Date: \tab 2019-01-30\cr
 License: \tab GPL2 \cr
 LazyLoad: \tab yes\cr
 }
