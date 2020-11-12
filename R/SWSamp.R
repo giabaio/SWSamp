@@ -850,7 +850,7 @@ sim.power <- function (I,J,H=NULL,K,design="cross-sec",mu=0,b.trt,b.time=NULL,
     setting <- list(n.clusters=I,n.time.points=J,avg.cluster.size=K,
                     design=design,formula=formula,method=method,family=family)
   } else {setting=list(formula=formula,method=method,family=family)}
-  closeAllConnections()
+  #closeAllConnections()
   
   # If the option 'plot=T' creates a moving average plot of the power
   if (plot==TRUE) {
