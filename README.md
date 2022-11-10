@@ -1,5 +1,4 @@
 # SWSamp
-[![CodeFactor](https://www.codefactor.io/repository/github/giabaio/SWSamp)](https://www.codefactor.io/repository/github/giabaio/SWSamp)
 
 SWSamp is a general purpose package to provide a suite of functions for the sample size calculations and power analysis in a Stepped Wedge Trial. Contains functions for closed-form sample size calculation (based on a set of specific models) and simulation-based procedures that can extend the basic framework.
 
@@ -32,12 +31,12 @@ pkgs <- c("foreach", "doParallel", "iterators", "parallel", "Matrix","lme4","INL
 repos <- c("https://cran.rstudio.com", ""https://inla.r-inla-download.org/R/stable"") 
 install.packages(pkgs,repos=repos,dependencies = "Depends")
 ```
-before installing the package using `devtools`:
+before installing the package using `remotes`:
 ```R
-devtools::install_github("giabaio/SWSamp")
+remotes::install_github("giabaio/SWSamp")
 ```
-Under Linux or MacOS, it is sufficient to install the package via `devtools`:
+Under Linux or MacOS, it is sufficient to install the package via `remotes`:
 ```R
-install.packages("devtools")
-devtools:install_github("giabaio/SWSamp")
+install.packages("remotes")
+remotes:install_github("giabaio/SWSamp")
 ```
