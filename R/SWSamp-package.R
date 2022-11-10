@@ -5,7 +5,7 @@
 #' Sample size calculations for a Stepped Wedge Trial
 #' 
 #' \tabular{ll}{ Package: \tab SWSamp\cr Type: \tab Package\cr Version: \tab
-#' 0.3\cr Date: \tab 2016-08-17\cr License: \tab GPL2 \cr LazyLoad: \tab yes\cr
+#' 0.3.2\cr Date: \tab 2021-11-10\cr License: \tab GPL2 \cr LazyLoad: \tab yes\cr
 #' } The package provides a suite of function to compute the power for a
 #' Stepped Wedge Design under different assumptions. The package can generate
 #' power based on simulations or use closed-formulae based on Hussey et Hughes

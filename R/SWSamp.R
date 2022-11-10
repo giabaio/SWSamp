@@ -94,7 +94,7 @@ make.swt <- function(I=NULL,J=NULL,H=NULL,K,design="cross-sec",mu=NULL,b.trt,
       
       # IF STATEMENTS TO CALCULATE ALL RELEVANT PARAMETERS FROM THE INPUTS GIVEN
       if(is.null(sigma.e) & is.null(sigma.a)) {
-        sigma.a <- rho*sigma.y
+        sigma.a <- sqrt(rho*sigma.y^2)
         sigma.e <- sqrt(sigma.y^2-sigma.a^2)
       }
       if(is.null(sigma.e) & is.null(rho)) {
@@ -850,8 +850,11 @@ sim.power <- function (I,J,H=NULL,K,design="cross-sec",mu=0,b.trt,b.time=NULL,
     setting <- list(n.clusters=I,n.time.points=J,avg.cluster.size=K,
                     design=design,formula=formula,method=method,family=family)
   } else {setting=list(formula=formula,method=method,family=family)}
+######
+  # see: https://stackoverflow.com/questions/41372927/isincompletecon-error-when-knitting-pdf
   #closeAllConnections()
-  
+######
+
   # If the option 'plot=T' creates a moving average plot of the power
   if (plot==TRUE) {
     # Defines some cutoff points in the simulations to plot the moving average
