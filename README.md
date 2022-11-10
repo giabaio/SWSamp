@@ -1,4 +1,6 @@
-# SWSamp [![Travis-CI Build Status](https://travis-ci.org/giabaio/SWSamp.svg?branch=master)](https://travis-ci.org/giabaio/SWSamp)[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/giabaio/SWSamp?branch=master&svg=true)](https://ci.appveyor.com/project/giabaio/SWSamp)[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/SWSamp)](https://cran.r-project.org/package=SWSamp)[![CRAN_Download_Badge](http://cranlogs.r-pkg.org/badges/SWSamp)](https://cran.r-project.org/package=SWSamp)
+# SWSamp
+[![CodeFactor](https://www.codefactor.io/repository/github/giabaio/SWSamp)](https://www.codefactor.io/repository/github/giabaio/SWSamp)
+
 SWSamp is a general purpose package to provide a suite of functions for the sample size calculations and power analysis in a Stepped Wedge Trial. Contains functions for closed-form sample size calculation (based on a set of specific models) and simulation-based procedures that can extend the basic framework.
 
 ## Installation
