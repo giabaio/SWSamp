@@ -1,12 +1,12 @@
 # SWSamp
 
-SWSamp is a general purpose package to provide a suite of functions for the sample size calculations and power analysis in a Stepped Wedge Trial. Contains functions for closed-form sample size calculation (based on a set of specific models) and simulation-based procedures that can extend the basic framework.
+SWSamp is a general purpose package to provide a suite of functions for the sample size calculations and power analysis in a Stepped Wedge Trial. Contains functions for closed-form sample size calculation (based on a set of specific models) and simulation-based procedures that can extend the basic framework. A detailed tutorial is available [here](https://gianluca.statistica.it/software/swsamp/tutorial.html), while general instructions and references are available [here](https://gianluca.statistica.it/software/swsamp/) and [here](https://gianluca.statistica.it/research/steppedwedge/).
 
 ## Installation
 There are two ways of installing `SWSamp`. A "stable" version is packaged and binary files are available for Windows and as source. To install the stable version on a Windows machine, run the following commands
 ```R
 install.packages("SWSamp",
-	repos=c("http://www.statistica.it/gianluca/R",
+	repos=c("https://gianluca.statistica.it/R",
 		"https://cran.rstudio.org",
 		"https://inla.r-inla-download.org/R/stable"),
 	dependencies=TRUE
@@ -17,7 +17,7 @@ Note that you need to specify a vector of repositories - the first one hosts `SW
 To install from source (e.g. on a Linux machine), run
 ```R
 install.packages("SWSamp",
-	repos=c("http://www.statistica.it/gianluca/R",
+	repos=c("http://gianluca.statistica.it/R",
 		"https://cran.rstudio.org",
 		"https://inla.r-inla-download.org/R/stable"),
 	type="source",
