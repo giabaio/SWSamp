@@ -6,8 +6,12 @@ SWSamp is a general purpose package to provide a suite of functions for the samp
 `SWSamp` can be installed running the following code in your `R` terminal.
 ```R
 install.packages(
-  "SWSamp", 
-  repos = c("https://giabaio.r-universe.dev", "https://cloud.r-project.org")
+   "SWSamp", 
+   repos = c(
+      "https://giabaio.r-universe.dev", 
+      "https://cloud.r-project.org",
+      "https://inla.r-inla-download.org/R/stable"
+   )
 )
 ```
 
