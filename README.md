@@ -3,40 +3,12 @@
 SWSamp is a general purpose package to provide a suite of functions for the sample size calculations and power analysis in a Stepped Wedge Trial. Contains functions for closed-form sample size calculation (based on a set of specific models) and simulation-based procedures that can extend the basic framework. A detailed tutorial is available [here](https://gianluca.statistica.it/software/swsamp/tutorial.html), while general instructions and references are available [here](https://gianluca.statistica.it/software/swsamp/) and [here](https://gianluca.statistica.it/research/steppedwedge/).
 
 ## Installation
-There are two ways of installing `SWSamp`. A "stable" version is packaged and binary files are available for Windows and as source. To install the stable version on a Windows machine, run the following commands
+`SWSamp` can be installed running the following code in your `R` terminal.
 ```R
-install.packages("SWSamp",
-	repos=c("https://gianluca.statistica.it/R",
-		"https://cran.rstudio.org",
-		"https://inla.r-inla-download.org/R/stable"),
-	dependencies=TRUE
+install.packages(
+  "SWSamp", 
+  repos = c("https://giabaio.r-universe.dev", "https://cloud.r-project.org")
 )
 ```
-Note that you need to specify a vector of repositories - the first one hosts `SWSamp`, while the second one should be an official [CRAN mirror](https://cran.r-project.org/index.html). You can select whichever one you like, but a CRAN mirror must be provided, so that `install.packages()` can also install the "dependencies" (e.g. other packages that are required for `SWSamp` to work). The third one is used to install the package [`INLA`](http://www.r-inla.org/), which can be used to perform simulation-based sample size calculations using a Bayesian approach. This process can be quite lengthy, if you miss many of the relevant packages.
 
-To install from source (e.g. on a Linux machine), run
-```R
-install.packages("SWSamp",
-	repos=c("http://gianluca.statistica.it/R",
-		"https://cran.rstudio.org",
-		"https://inla.r-inla-download.org/R/stable"),
-	type="source",
-	dependencies=TRUE
-
-```
-
-The second way involves using the "development" version of `SWSamp` - this will usually be updated more frequently and may be continuously tested. On Windows machines, you need to install a few dependencies, including [Rtools](https://cran.r-project.org/bin/windows/Rtools/) first, e.g. by running
-```R
-pkgs <- c("foreach", "doParallel", "iterators", "parallel", "Matrix","lme4","INLA","Rtools","devtools")
-repos <- c("https://cran.rstudio.com", ""https://inla.r-inla-download.org/R/stable"") 
-install.packages(pkgs,repos=repos,dependencies = "Depends")
-```
-before installing the package using `remotes`:
-```R
-remotes::install_github("giabaio/SWSamp")
-```
-Under Linux or MacOS, it is sufficient to install the package via `remotes`:
-```R
-install.packages("remotes")
-remotes:install_github("giabaio/SWSamp")
-```
+As every other package stored in `GitHub`, you could use `remotes`, but we recommend using the `r-universe` installation, as it is easier to maintain.
