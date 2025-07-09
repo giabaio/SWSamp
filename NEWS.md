@@ -1,3 +1,9 @@
+# SWSamp 0.3.21
+
+## July 2025
+
+* Refactors the package to prevents failures in compilation for `r-universe.dev`
+
 # SWSamp 0.3.2
 
 * Fixes a minor error in the code for `make.swt`. The previous version would

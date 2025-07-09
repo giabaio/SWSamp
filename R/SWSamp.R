@@ -1,3 +1,13 @@
+#' @importFrom foreach %dopar%
+#' @importFrom foreach foreach
+#' @importFrom iterators icount
+#' @importFrom parallel detectCores
+#' @importFrom graphics abline axis
+#' @import lme4
+#' @import Matrix
+#' @importFrom stats terms as.formula complete.cases delete.response drop1 formula lm logLik model.frame model.matrix pchisq pf printCoefmat pt qt setNames update.formula vcov confint pnorm power.prop.test power.t.test qnorm rnorm var glm rbinom rpois median quantile sd
+NULL
+
 #' Simulates a 'virtual' Stepped Wedge trial
 #' 
 #' Simulates trial data for a SWT with normally distributed outcome
@@ -632,7 +642,7 @@ sim.power <- function (I,J,H=NULL,K,design="cross-sec",mu=0,b.trt,b.time=NULL,
         tval <- theta / sd.theta
         pvalue <- 2*pnorm(abs(tval), lower.tail = FALSE)
         # Random effects sds
-        mat <- INLA::inla.contrib.sd(m)$hyper
+        mat <- inla.contrib.sd(m)$hyper
         rnd.eff.sd <- as.matrix(mat[,1])
         names(rnd.eff.sd) <- rownames(mat)
         list(power=signif,theta=theta,sd.theta=sd.theta,
@@ -757,7 +767,7 @@ sim.power <- function (I,J,H=NULL,K,design="cross-sec",mu=0,b.trt,b.time=NULL,
       tval <- theta / sd.theta
       pvalue <- 2*pnorm(abs(tval), lower.tail = FALSE)
       # Random effects sds
-      mat <- INLA::inla.contrib.sd(m)$hyper
+      mat <- inla.contrib.sd(m)$hyper
       rnd.eff.sd <- as.matrix(mat[,1])
       names(rnd.eff.sd) <- rownames(mat)
       list(power=signif,theta=theta,sd.theta=sd.theta,
@@ -1494,257 +1504,359 @@ DE.woert <- function(outcome="cont",input,K,J,B=1,T=1,rho,sig.level=0.05,power=.
 #' 7. Feb 2007
 #' @keywords Stepped wedge design
 #' @examples
-#' 
-#' #cluster.search(I=c(4,10),target.power=.8,J=6,K=30,mu=1.5,b.trt=.8,rho=0,
-#' #family="poisson",n.sims=10)
+#' \dontrun{
+#' cluster.search(I=c(4,10),target.power=.8,J=6,K=30,mu=1.5,b.trt=.8,rho=0,
+#' family="poisson",n.sims=10)
+#' }
 #' 
 #' @export cluster.search
-cluster.search <- function(target.power=NULL, I=NULL, J=NULL ,H=NULL,K,design="cross-sec",mu=0,b.trt,b.time=NULL,
-                      sigma.y=NULL,sigma.e=NULL,rho=NULL,sigma.a=NULL,
-                      rho.ind=NULL,sigma.v=NULL,n.sims=1000,formula=NULL,
-                      family="gaussian",natural.scale=TRUE,sig.level=0.05,n.cores=NULL,...){
-	
-# Find the optimum I or J from a given range
-# Enter a range, e.g. I=c(1,10), to optimise on that parameter
-	
-#start clock
-tic <- proc.time()
-	
-# Determine which parameter needs to be optimised	
-if(length(I)==2 & length(J)==1){print("Optimising on I ...")
-	
-	I.lower <- I[1]
-	I.upper <- I[2]
-	
-	# Check they haven't entered 0 as a possible cluster size	
-	if(I.upper==0 | I.lower==0){stop("Error: I must be greater than 0.")}
-		
-	power.storage <- matrix(c(rep(x=0, times=(I.upper - I.lower)+1)))
-	rownames(power.storage) <- c(I.lower:I.upper)
-	
-	# Initially check upper and lower limit 	
-	test.lower <- sim.power(I=I.lower,J=J,H=H,K=K,design=design,mu=mu,b.trt=b.trt,b.time=b.time,
-                    sigma.y=sigma.y,sigma.e=sigma.e,rho=rho,sigma.a=sigma.a,
-                    rho.ind=rho.ind,sigma.v=sigma.v,n.sims=n.sims,formula=formula,
-                    family=family,natural.scale=natural.scale,sig.level=sig.level,n.cores=n.cores)
-					
-	power.lower <- test.lower$power
-	# Store the lower power limit in the storeage list
-	power.storage[I.lower - (I.lower-1)] <- power.lower
-					
-	if(power.lower >= target.power){print("Lower bound of range already above power threshold. Try a smaller lower bound.")
-										return(I.lower)
-									   break}			
-					
-	test.upper <- sim.power(I=I.upper,J=J,H=H,K=K,design=design,mu=mu,b.trt=b.trt,b.time=b.time,
-                    sigma.y=sigma.y,sigma.e=sigma.e,rho=rho,sigma.a=sigma.a,
-                    rho.ind=rho.ind,sigma.v=sigma.v,n.sims=n.sims,formula=formula,
-                    family=family,natural.scale=natural.scale,sig.level=sig.level,n.cores=n.cores)
-					
-	power.upper <- test.upper$power
-	# Store the upper power limit in the storeage list
-	power.storage[I.upper - (I.lower-1)] <- power.upper
-					
-	if(power.upper <= target.power){print("Range does not include optimum. Try a larger upper bound.")
-										return(I.upper)
-										break}
-										
-										
-	# Loop that successively narrows range by half based on power of the midpoint		
-	while(TRUE){
-
-
-		range <- c(I.lower:I.upper)			# Range of I to be checked
-		midpoint <- ceiling(median(range))	# Middle value - must be an integer	
-
-	if(length(range) != 2){	
-			
-	# If power has already been calculated (i.e. is stored in power.storage), use that
-	if(power.storage[midpoint - (I[1]-1)]!=0){midpoint.power <- power.storage[midpoint+I[1]]
-										  cat("used store value \n")
-										  cat("midpoint is:", midpoint, "range is:", range, "power is:", midpoint.power, "\n")
-										  cat("powers are", power.storage, "\n")}
-	
-	# Otherwise calculate the power using sim.power
-	else if(power.storage[midpoint - (I[1]-1)]==0){	
-
-		# If the range has more than 2 elements, use the midpoint of the range to discard one half of the range based on the power
-		
-		
-			# Calculate power for SWT based on midpoint
-			midpoint.power <- sim.power(I=midpoint,J=J,H=H,K=K,design=design,mu=mu,b.trt=b.trt,b.time=b.time,
-                    sigma.y=sigma.y,sigma.e=sigma.e,rho=rho,sigma.a=sigma.a,
-                    rho.ind=rho.ind,sigma.v=sigma.v,n.sims=n.sims,formula=formula,
-                    family=family,natural.scale=natural.scale,sig.level=sig.level,n.cores=n.cores)$power
-				
-		power.storage[midpoint - (I[1]-1)] <- midpoint.power
-		
-		}			
-			# If the power of the midpoint is too low, discard the lower half of the range
-			if (midpoint.power < target.power) {I.upper <- I.upper
-												I.lower <- midpoint}
-			# If the power of the midpoint is high enough, discard the upper half of the range
-			if (midpoint.power >= target.power) {I.upper <- midpoint
-											     I.lower < I.lower}
-		}	
-
-		# If the range has only 2 elements, compare them directly
-		if(length(range) == 2){
-		
-			# Calculate power for SWT based on the smaller value			
-			if(power.storage[I.lower - (I[1]-1)]!=0){lower.power <- power.storage[I.lower - (I[1]-1)]}	# Utilise stored value if appropriate
-			
-			else{lower.power <- sim.power(I=I.lower,J=J,H=H,K=K,design=design,mu=mu,b.trt=b.trt,b.time=b.time,
-                    sigma.y=sigma.y,sigma.e=sigma.e,rho=rho,sigma.a=sigma.a,
-                    rho.ind=rho.ind,sigma.v=sigma.v,n.sims=n.sims,formula=formula,
-                    family=family,natural.scale=natural.scale,sig.level=sig.level,n.cores=n.cores)$power
-					}
-			
-			# Calculate power for SWT based on the larger value			
-			if(power.storage[I.upper - (I[1]-1)]!=0){upper.power <- power.storage[I.upper - (I[1]-1)]}	# Utilise stored value if appropriate
-			
-			else{upper.power <- sim.power(I=I.upper,J=J,H=H,K=K,design=design,mu=mu,b.trt=b.trt,b.time=b.time,
-                    sigma.y=sigma.y,sigma.e=sigma.e,rho=rho,sigma.a=sigma.a,
-                    rho.ind=rho.ind,sigma.v=sigma.v,n.sims=n.sims,formula=formula,
-                    family=family,natural.scale=natural.scale,sig.level=sig.level,n.cores=n.cores)$power
-					}
-					
-			#end time counter
-			toc <- proc.time(); time2run <- (toc-tic)[3]; names(time2run) <- "Time to run (secs)"
-					
-			# If either has power < target.power, discard 
-			if(lower.power < target.power && upper.power < target.power){ return(0)}
-			# If upper limit has enough power, but lower limit does not, return the upper limit
-			if(lower.power < target.power && upper.power >= target.power){ return(list(Optimum_I=I.upper, power=upper.power, time2run=time2run))}
-			# If both lmits have sufficient power, return the lower limit
-			if(lower.power >= target.power && upper.power >= target.power){ return(list(Optimum_I=I.lower, power=lower.power, time2run=time2run))}
-			# Other situations should not be possible
-			else{return(0)
-			# Optimum has been found, so break the loop and terminate the function
-			break}
-			}						
-	}
+cluster.search <- function(target.power = NULL, I = NULL, J = NULL, H = NULL, K,
+                           design = "cross-sec", mu = 0, b.trt, b.time = NULL,
+                           sigma.y = NULL, sigma.e = NULL, rho = NULL, sigma.a = NULL,
+                           rho.ind = NULL, sigma.v = NULL, n.sims = 1000, formula = NULL,
+                           family = "gaussian", natural.scale = TRUE, sig.level = 0.05,
+                           n.cores = NULL, ...) {
+  
+  # Find the optimum I or J from a given range
+  # Enter a range, e.g. I = c(1, 10), to optimise on that parameter
+  
+  # Start clock
+  tic <- proc.time()
+  
+  # Determine which parameter needs to be optimised
+  if (length(I) == 2 & length(J) == 1) {
+    print("Optimising on I ...")
+    
+    I.lower <- I[1]
+    I.upper <- I[2]
+    
+    # Check they haven't entered 0 as a possible cluster size
+    if (I.upper == 0 | I.lower == 0) {
+      stop("Error: I must be greater than 0.")
+    }
+    
+    power.storage <- matrix(0, nrow = (I.upper - I.lower) + 1)
+    rownames(power.storage) <- I.lower:I.upper
+    
+    # Initially check upper and lower limit
+    test.lower <- sim.power(I = I.lower, J = J, H = H, K = K, design = design,
+                            mu = mu, b.trt = b.trt, b.time = b.time,
+                            sigma.y = sigma.y, sigma.e = sigma.e, rho = rho,
+                            sigma.a = sigma.a, rho.ind = rho.ind, sigma.v = sigma.v,
+                            n.sims = n.sims, formula = formula, family = family,
+                            natural.scale = natural.scale, sig.level = sig.level,
+                            n.cores = n.cores)
+    
+    power.lower <- test.lower$power
+    power.storage[I.lower - (I.lower - 1)] <- power.lower
+    
+    if (power.lower >= target.power) {
+      print("Lower bound of range already above power threshold. Try a smaller lower bound.")
+      return(I.lower)
+    }
+    
+    test.upper <- sim.power(I = I.upper, J = J, H = H, K = K, design = design,
+                            mu = mu, b.trt = b.trt, b.time = b.time,
+                            sigma.y = sigma.y, sigma.e = sigma.e, rho = rho,
+                            sigma.a = sigma.a, rho.ind = rho.ind, sigma.v = sigma.v,
+                            n.sims = n.sims, formula = formula, family = family,
+                            natural.scale = natural.scale, sig.level = sig.level,
+                            n.cores = n.cores)
+    
+    power.upper <- test.upper$power
+    power.storage[I.upper - (I.lower - 1)] <- power.upper
+    
+    if (power.upper <= target.power) {
+      print("Range does not include optimum. Try a larger upper bound.")
+      return(I.upper)
+    }
+    
+    # Loop that successively narrows range by half based on power of the midpoint
+    while (TRUE) {
+      
+      range <- I.lower:I.upper
+      midpoint <- ceiling(median(range)) # Middle value - must be an integer
+      
+      if (length(range) != 2) {
+        
+        # If power has already been calculated, use that
+        if (power.storage[midpoint - (I[1] - 1)] != 0) {
+          midpoint.power <- power.storage[midpoint - (I[1] - 1)]
+          cat("Used stored value\n")
+          cat("Midpoint is:", midpoint, "Range is:", range, "Power is:", midpoint.power, "\n")
+          cat("Powers are", power.storage, "\n")
+        } else {
+          # Otherwise calculate power
+          midpoint.power <- sim.power(I = midpoint, J = J, H = H, K = K, design = design,
+                                      mu = mu, b.trt = b.trt, b.time = b.time,
+                                      sigma.y = sigma.y, sigma.e = sigma.e, rho = rho,
+                                      sigma.a = sigma.a, rho.ind = rho.ind, sigma.v = sigma.v,
+                                      n.sims = n.sims, formula = formula, family = family,
+                                      natural.scale = natural.scale, sig.level = sig.level,
+                                      n.cores = n.cores)$power
+          
+          power.storage[midpoint - (I[1] - 1)] <- midpoint.power
+        }
+        
+        if (midpoint.power < target.power) {
+          I.lower <- midpoint
+        } else {
+          I.upper <- midpoint
+        }
+        
+      } else {
+        # If the range has only 2 elements, compare them directly
+        
+        if (power.storage[I.lower - (I[1] - 1)] != 0) {
+          lower.power <- power.storage[I.lower - (I[1] - 1)]
+        } else {
+          lower.power <- sim.power(I = I.lower, J = J, H = H, K = K, design = design,
+                                   mu = mu, b.trt = b.trt, b.time = b.time,
+                                   sigma.y = sigma.y, sigma.e = sigma.e, rho = rho,
+                                   sigma.a = sigma.a, rho.ind = rho.ind, sigma.v = sigma.v,
+                                   n.sims = n.sims, formula = formula, family = family,
+                                   natural.scale = natural.scale, sig.level = sig.level,
+                                   n.cores = n.cores)$power
+        }
+        
+        if (power.storage[I.upper - (I[1] - 1)] != 0) {
+          upper.power <- power.storage[I.upper - (I[1] - 1)]
+        } else {
+          upper.power <- sim.power(I = I.upper, J = J, H = H, K = K, design = design,
+                                   mu = mu, b.trt = b.trt, b.time = b.time,
+                                   sigma.y = sigma.y, sigma.e = sigma.e, rho = rho,
+                                   sigma.a = sigma.a, rho.ind = rho.ind, sigma.v = sigma.v,
+                                   n.sims = n.sims, formula = formula, family = family,
+                                   natural.scale = natural.scale, sig.level = sig.level,
+                                   n.cores = n.cores)$power
+        }
+        
+        toc <- proc.time()
+        time2run <- (toc - tic)[3]
+        names(time2run) <- "Time to run (secs)"
+        
+        if (lower.power < target.power && upper.power < target.power) {
+          return(0)
+        }
+        if (lower.power < target.power && upper.power >= target.power) {
+          return(list(Optimum_I = I.upper, power = upper.power, time2run = time2run))
+        }
+        if (lower.power >= target.power && upper.power >= target.power) {
+          return(list(Optimum_I = I.lower, power = lower.power, time2run = time2run))
+        }
+        else {
+          return(0)
+        }
+      }
+    }
+  }
+  
+  # Determine which parameter needs to be optimised
+  if (length(J) == 2 & length(I) == 1) {
+    print("Optimising on J ...")
+    
+    J.lower <- J[1]
+    J.upper <- J[2]
+    
+    if (J.upper == 0 | J.lower == 0) {
+      stop("Error: J must be greater than 0.")
+    }
+    
+    power.storage <- matrix(0, nrow = (J.upper - J.lower) + 1)
+    rownames(power.storage) <- J.lower:J.upper
+    
+    test.lower <- sim.power(J = J.lower, I = I, H = H, K = K, design = design,
+                            mu = mu, b.trt = b.trt, b.time = b.time,
+                            sigma.y = sigma.y, sigma.e = sigma.e, rho = rho,
+                            sigma.a = sigma.a, rho.ind = rho.ind, sigma.v = sigma.v,
+                            n.sims = n.sims, formula = formula, family = family,
+                            natural.scale = natural.scale, sig.level = sig.level,
+                            n.cores = n.cores)
+    
+    power.lower <- test.lower$power
+    power.storage[J.lower - (J.lower - 1)] <- power.lower
+    
+    if (power.lower >= target.power) {
+      print("Lower bound of range already above power threshold. Try a smaller lower bound.")
+      return(J.lower)
+    }
+    
+    test.upper <- sim.power(J = J.upper, I = I, H = H, K = K, design = design,
+                            mu = mu, b.trt = b.trt, b.time = b.time,
+                            sigma.y = sigma.y, sigma.e = sigma.e, rho = rho,
+                            sigma.a = sigma.a, rho.ind = rho.ind, sigma.v = sigma.v,
+                            n.sims = n.sims, formula = formula, family = family,
+                            natural.scale = natural.scale, sig.level = sig.level,
+                            n.cores = n.cores)
+    
+    power.upper <- test.upper$power
+    power.storage[J.upper - (J.lower - 1)] <- power.upper
+    
+    if (power.upper <= target.power) {
+      print("Range does not include optimum. Try a larger upper bound.")
+      return(J.upper)
+    }
+    
+    while (TRUE) {
+      
+      range <- J.lower:J.upper
+      midpoint <- ceiling(median(range))
+      
+      if (length(range) != 2) {
+        
+        if (power.storage[midpoint - (J[1] - 1)] != 0) {
+          midpoint.power <- power.storage[midpoint - (J[1] - 1)]
+          cat("Used stored value\n")
+          cat("Midpoint is:", midpoint, "Range is:", range, "Power is:", midpoint.power, "\n")
+          cat("Powers are", power.storage, "\n")
+        } else {
+          midpoint.power <- sim.power(J = midpoint, I = I, H = H, K = K, design = design,
+                                      mu = mu, b.trt = b.trt, b.time = b.time,
+                                      sigma.y = sigma.y, sigma.e = sigma.e, rho = rho,
+                                      sigma.a = sigma.a, rho.ind = rho.ind, sigma.v = sigma.v,
+                                      n.sims = n.sims, formula = formula, family = family,
+                                      natural.scale = natural.scale, sig.level = sig.level,
+                                      n.cores = n.cores)$power
+          
+          power.storage[midpoint - (J[1] - 1)] <- midpoint.power
+        }
+        
+        if (midpoint.power < target.power) {
+          J.lower <- midpoint
+        } else {
+          J.upper <- midpoint
+        }
+        
+      } else {
+        
+        if (power.storage[J.lower - (J[1] - 1)] != 0) {
+          lower.power <- power.storage[J.lower - (J[1] - 1)]
+        } else {
+          lower.power <- sim.power(J = J.lower, I = I, H = H, K = K, design = design,
+                                   mu = mu, b.trt = b.trt, b.time = b.time,
+                                   sigma.y = sigma.y, sigma.e = sigma.e, rho = rho,
+                                   sigma.a = sigma.a, rho.ind = rho.ind, sigma.v = sigma.v,
+                                   n.sims = n.sims, formula = formula, family = family,
+                                   natural.scale = natural.scale, sig.level = sig.level,
+                                   n.cores = n.cores)$power
+        }
+        
+        if (power.storage[J.upper - (J[1] - 1)] != 0) {
+          upper.power <- power.storage[J.upper - (J[1] - 1)]
+        } else {
+          upper.power <- sim.power(J = J.upper, I = I, H = H, K = K, design = design,
+                                   mu = mu, b.trt = b.trt, b.time = b.time,
+                                   sigma.y = sigma.y, sigma.e = sigma.e, rho = rho,
+                                   sigma.a = sigma.a, rho.ind = rho.ind, sigma.v = sigma.v,
+                                   n.sims = n.sims, formula = formula, family = family,
+                                   natural.scale = natural.scale, sig.level = sig.level,
+                                   n.cores = n.cores)$power
+        }
+        
+        toc <- proc.time()
+        time2run <- (toc - tic)[3]
+        names(time2run) <- "Time to run (secs)"
+        
+        if (lower.power < target.power && upper.power < target.power) {
+          return(0)
+        }
+        if (lower.power < target.power && upper.power >= target.power) {
+          return(list(Optimum_J = J.upper, power = upper.power, time2run = time2run))
+        }
+        if (lower.power >= target.power && upper.power >= target.power) {
+          return(list(Optimum_J = J.lower, power = lower.power, time2run = time2run))
+        }
+        else {
+          return(0)
+        }
+      }
+    }
+  }
+  
+  if (length(I) != 2 & length(J) != 2) {
+    stop("Error: exactly one of I or J must be a vector of length 2.")
+  }
+  
+  proc.time() - tic
 }
-		
-# Determine which paramteter needs to be optimised	
-if(length(J)==2 & length(I)==1){print("Optimising on J ...")}	
-
-	J.lower <- J[1]
-	J.upper <- J[2]
-	
-	# Check they haven't entered 0 as a possible number of time points	
-	if(J.upper==0 | J.lower==0){stop("Error: J must be greater than 0.")}
-		
-		
-	power.storage <- matrix(c(rep(x=0, times=(J.upper - J.lower)+1)))
-	rownames(power.storage) <- c(J.lower:J.upper)
-	
-	# Initially check upper and lower limit 	
-	test.lower <- sim.power(J=J.lower,I=I,H=H,K=K,design=design,mu=mu,b.trt=b.trt,b.time=b.time,
-                    sigma.y=sigma.y,sigma.e=sigma.e,rho=rho,sigma.a=sigma.a,
-                    rho.ind=rho.ind,sigma.v=sigma.v,n.sims=n.sims,formula=formula,
-                    family=family,natural.scale=natural.scale,sig.level=sig.level,n.cores=n.cores)
-					
-	power.lower <- test.lower$power
-	# Store the lower power limit in the storeage list
-	power.storage[J.lower - (J.lower-1)] <- power.lower
-					
-	if(power.lower >= target.power){print("Lower bound of range already above power threshold. Try a smaller lower bound.")		
-										return(J.lower)
-										break}			
-					
-	test.upper <- sim.power(J=J.upper,I=I,H=H,K=K,design=design,mu=mu,b.trt=b.trt,b.time=b.time,
-                    sigma.y=sigma.y,sigma.e=sigma.e,rho=rho,sigma.a=sigma.a,
-                    rho.ind=rho.ind,sigma.v=sigma.v,n.sims=n.sims,formula=formula,
-                    family=family,natural.scale=natural.scale,sig.level=sig.level,n.cores=n.cores)
-					
-	power.upper <- test.upper$power
-	# Store the upper power limit in the storeage list
-	power.storage[J.upper - (J.lower-1)] <- power.upper
-					
-	if(power.upper <= target.power){print("Range does not include optimum. Try a larger upper bound.")
-										return(J.upper)
-										break}
-										
-										
-	# Loop that successively narrows range by half based on power of the midpoint		
-	while(TRUE){
 
 
-		range <- c(J.lower:J.upper)			# Range of I to be checked
-		midpoint <- ceiling(median(range))	# Middle value - must be an integer	
 
-	if(length(range) != 2){	
-			
-	# If power has already been calculated (i.e. is stored in power.storage), use that
-	if(power.storage[midpoint - (J[1]-1)]!=0){midpoint.power <- power.storage[midpoint+J[1]]
-										  cat("used store value \n")
-										  cat("midpoint is:", midpoint, "range is:", range, "power is:", midpoint.power, "\n")
-										  cat("powers are", power.storage, "\n")}
-	
-	# Otherwise calculate the power using sim.power
-	else if(power.storage[midpoint - (J[1]-1)]==0){	
-
-		# If the range has more than 2 elements, use the midpoint of the range to discard one half of the range based on the power
-		
-		
-			# Calculate power for SWT based on midpoint
-			midpoint.power <- sim.power(J=midpoint,I=I,H=H,K=K,design=design,mu=mu,b.trt=b.trt,b.time=b.time,
-                    sigma.y=sigma.y,sigma.e=sigma.e,rho=rho,sigma.a=sigma.a,
-                    rho.ind=rho.ind,sigma.v=sigma.v,n.sims=n.sims,formula=formula,
-                    family=family,natural.scale=natural.scale,sig.level=sig.level,n.cores=n.cores)$power
-				
-		power.storage[midpoint - (J[1]-1)] <- midpoint.power
-		
-		
-		}			
-			# If the power of the midpoint is too low, discard the lower half of the range
-			if (midpoint.power < target.power) {J.upper <- J.upper
-												J.lower <- midpoint}
-			# If the power of the midpoint is high enough, discard the upper half of the range
-			if (midpoint.power >= target.power) {J.upper <- midpoint
-											     J.lower < J.lower}
-		}	
-
-		# If the range has only 2 elements, compare them directly
-		if(length(range) == 2){
-		
-			# Calculate power for SWT based on the smaller value			
-			if(power.storage[J.lower - (J[1]-1)]!=0){lower.power <- power.storage[J.lower - (J[1]-1)]}  # Utilise stored value if appropriate
-			
-			else{lower.power <- sim.power(J=J.lower,I=I,H=H,K=K,design=design,mu=mu,b.trt=b.trt,b.time=b.time,
-                    sigma.y=sigma.y,sigma.e=sigma.e,rho=rho,sigma.a=sigma.a,
-                    rho.ind=rho.ind,sigma.v=sigma.v,n.sims=n.sims,formula=formula,
-                    family=family,natural.scale=natural.scale,sig.level=sig.level,n.cores=n.cores)$power
-					}
-			
-			# Calculate power for SWT based on the larger value			
-			if(power.storage[J.upper - (J[1]-1)]!=0){upper.power <- power.storage[J.upper - (J[1]-1)]}	# Utilise stored value if appropriate
-			
-			else{upper.power <- sim.power(J=J.upper,I=I,H=H,K=K,design=design,mu=mu,b.trt=b.trt,b.time=b.time,
-                    sigma.y=sigma.y,sigma.e=sigma.e,rho=rho,sigma.a=sigma.a,
-                    rho.ind=rho.ind,sigma.v=sigma.v,n.sims=n.sims,formula=formula,
-                    family=family,natural.scale=natural.scale,sig.level=sig.level,n.cores=n.cores)$power
-					}
-					
-			#end timer
-			toc <- proc.time(); time2run <- (toc-tic)[3]; names(time2run) <- "Time to run (secs)"			
-					
-			# If either has power < target.power, discard 
-			if(lower.power < target.power && upper.power < target.power){ return(0)}
-			# If upper limit has enough power, but lower limit does not, return the upper limit
-			if(lower.power < target.power && upper.power >= target.power){ return(list(Optimum_J=J.upper, power=upper.power, time2run=time2run))}
-			# If both lmits have sufficient power, return the lower limit
-			if(lower.power >= target.power && upper.power >= target.power){ return(list(Optimum_J=J.lower, power=lower.power, time2run=time2run))}
-			# Other situations should not be possible
-			else{return(0)
-			# Optimum has been found, so break the loop and terminate the function
-			break}
-			}						
-	}
-	
-if(length(I) != 2 & length(J) != 2){stop("Error: exactly one of I or J must be a vector of length 2.")}	
-	
-		#stop clock
-		proc.time() - tic
+#' Computes the standard deviation for the structured (random) effects in an INLA model
+#'
+#' Computes the posterior distribution of the standard deviations for the structured 
+#' (random) effects in an INLA model, starting from the default output based on the precisions.
+#'
+#' @param model An INLA model, fitted using the \code{\link[inla]{inla}} function. The formula specified for the model 
+#' should include at least one structured (random) effect in the form \code{f(variable, model = "iid")}.
+#' @param nsamples The number of simulations from the posterior distribution of the standard deviations
+#' used to compute the summary statistics. Default is 1000.
+#'
+#' @return A list with the following components:
+#' \describe{
+#'   \item{\code{samples}}{A matrix including the simulated values from the posterior distributions.}
+#'   \item{\code{hyper}}{A summary table reporting the mean, standard deviation, and 95\% credible interval 
+#'   for the posterior distributions of each random effect.}
+#' }
+#'
+#' @author Gianluca Baio \email{gianluca@stats.ucl.ac.uk}
+#'
+#' @examples
+#' \dontrun{
+#' # Data generation
+#' n <- 12
+#' Ntrials <- sample(80:100, size = n, replace = TRUE)
+#' eta <- rnorm(n, 0, 0.5)
+#' prob <- exp(eta) / (1 + exp(eta))
+#' y <- rbinom(n, size = Ntrials, prob = prob)
+#' data <- data.frame(y = y, z = 1:n)
+#' formula <- y ~ f(z, model = "iid")
+#' m <- inla(formula, data = data, family = "binomial", Ntrials = Ntrials)
+#' summary(m)
+#' s <- inla.contrib.sd(m)
+#' s$hyper
+#' hist(s$samples, xlab = "standard deviation for z", main = "")
+#' }
+#' @noRd
+#' @keywords internal
+#' 
+inla.contrib.sd <- function(model, nsamples=1000) {
+  ## contributed by Gianluca Baio <gianluca@stats.ucl.ac.uk>
+  
+  ## Computes the sd for the random effects in an INLA model
+  ## 1. Defines the precision (generates a matrix with bins and
+  ## density on the precision scale)
+  
+  ## 2. Simulates replications from the posterior distributions of
+  ## the quantities of interest
+  
+  ## Names of the variables associated with structured effects
+  rand.effs <- names(model$marginals.hyperpar)
+  for (i in 1:length(rand.effs)) {
+    cmd <- paste("prec.marg.",i,"<-model$marginals.hyperpar$'",rand.effs[i],"'",sep="")
+    eval(parse(text=cmd)) # marginal distribution of the precision, tau
+    ## Simulation from the posterior marginal distribution for sigma = 1/sqrt(tau)
+    cmd <- paste("sigma.", i,
+                 "<- inla.rmarginal(nsamples,inla.tmarginal(function(x) 1/sqrt(x), prec.marg.",
+                 i,"))",sep="")
+    eval(parse(text=cmd))
+  }
+  
+  ## Outputs of the function
+  mat <- matrix(NA, nsamples, length(rand.effs))
+  for (i in 1:length(rand.effs)) {
+    cmd <- paste("mat[,i] <- sigma.",i,sep="")
+    eval(parse(text=cmd)) 
+  }
+  names2 <- gsub("Precision","sd",rand.effs)
+  colnames(mat) <- names2
+  
+  tab <- matrix(NA,length(rand.effs),4)
+  for (i in 1:length(rand.effs)) {
+    tab[i,] <- c(mean(mat[,i]),sd(mat[,i]),quantile(mat[,i],.025),quantile(mat[,i],.975))
+  }
+  rownames(tab) <- names2
+  colnames(tab) <- c("mean","sd","2.5%","97.5%")
+  
+  return (list(samples=mat, hyper=tab))
 }

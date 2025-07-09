@@ -14,5 +14,4 @@ install.packages(
    )
 )
 ```
-
 As every other package stored in `GitHub`, you could use `remotes`, but we recommend using the `r-universe` installation, as it is easier to maintain.

@@ -2,15 +2,32 @@ Package: SWSamp
 Type: Package
 Title: Computes Sample Size for a Stepped Wedge Design, using
         Simulation-Based Calculations
-Version: 0.3.2
-Date: 2022-11-10
-Imports: foreach, doParallel, iterators, parallel, Matrix
-Depends: lme4
-Suggests: INLA
-Additional_repositories: https://inla.r-inla-download.org/R/stable
-Author: Gianluca Baio, Rosie Leech
-Maintainer: Gianluca Baio <g.baio@ucl.ac.uk>
-Description: Provides a suite of functions for the sample size calculations and power analysis in a Stepped Wedge Trial. Contains functions for closed-form sample size calculation (based on a set of specific models) and simulation-based procedures that can extend the basic framework.
-License: file LICENSE
+Version: 0.3.21
+Imports: 
+    foreach, 
+    doParallel, 
+    iterators, 
+    parallel, 
+    Matrix
+Depends: 
+    lme4
+Suggests: 
+    INLA
+Additional_repositories: 
+    https://inla.r-inla-download.org/R/stable/
+Authors@R: c(
+    person("Gianluca", "Baio",
+            email = "g.baio@ucl.ac.uk",
+            role = c("aut", "cre", "cph"),
+            comment = c(ORCID = "0000-0003-4314-2570")),
+    person("Rosie", "Leech",
+            email = "",
+            role = c("aut")))    
+Description: Provides a suite of functions for the sample size calculations and 
+             power analysis in a Stepped Wedge Trial. Contains functions for 
+             closed-form sample size calculation (based on a set of specific 
+             models) and simulation-based procedures that can extend the 
+             basic framework.
+License: GPL-3
 NeedsCompilation: no
-RoxygenNote: 7.2.1
+RoxygenNote: 7.3.2.9000

@@ -94,9 +94,10 @@ Given some inputs determines the optimal combination of clusters/time points
 to get a set level of power.
 }
 \examples{
-
-#cluster.search(I=c(4,10),target.power=.8,J=6,K=30,mu=1.5,b.trt=.8,rho=0,
-#family="poisson",n.sims=10)
+\dontrun{
+cluster.search(I=c(4,10),target.power=.8,J=6,K=30,mu=1.5,b.trt=.8,rho=0,
+family="poisson",n.sims=10)
+}
 
 }
 \references{
