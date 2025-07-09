@@ -2,36 +2,19 @@
 % Please edit documentation in R/SWSamp-package.R
 \docType{package}
 \name{SWSamp-package}
-\alias{SWSamp-package}
 \alias{SWSamp}
-\title{SWSamp}
+\alias{SWSamp-package}
+\title{SWSamp: Computes Sample Size for a Stepped Wedge Design, using Simulation-Based Calculations}
 \description{
-Sample size calculations for a Stepped Wedge Trial
-}
-\details{
-\tabular{ll}{ Package: \tab SWSamp\cr Type: \tab Package\cr Version: \tab
-0.3.2\cr Date: \tab 2021-11-10\cr License: \tab GPL2 \cr LazyLoad: \tab yes\cr
-} The package provides a suite of function to compute the power for a
-Stepped Wedge Design under different assumptions. The package can generate
-power based on simulations or use closed-formulae based on Hussey et Hughes
-}
-\references{
-Baio, G; Copas, A; Ambler, G; Hargreaves, J; Beard, E; and Omar,
-RZ Sample size calculation for a stepped wedge trial. Trials, 16:354. Aug
-2015.
-
-Hussey M and Hughes J. Design and analysis of stepped wedge cluster
-randomized trials. Contemporary Clinical Trials. 28(2):182-91. Epub 2006 Jul
-7. Feb 2007
+Provides a suite of functions for the sample size calculations and power analysis in a Stepped Wedge Trial. Contains functions for closed-form sample size calculation (based on a set of specific models) and simulation-based procedures that can extend the basic framework.
 }
 \author{
-Gianluca Baio
+\strong{Maintainer}: Gianluca Baio \email{g.baio@ucl.ac.uk} (\href{https://orcid.org/0000-0003-4314-2570}{ORCID}) [copyright holder]
 
-Maintainer: Gianluca Baio (g.baio@ucl.ac.uk)
+Authors:
+\itemize{
+  \item Rosie Leech
 }
-\keyword{Design}
-\keyword{Sample}
-\keyword{Stepped}
-\keyword{Wedge}
-\keyword{calculations}
-\keyword{size}
+
+}
+\keyword{internal}
